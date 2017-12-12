@@ -13,8 +13,10 @@ i = 1
 
 def callback(ch, method, properties, body):
     global i
-    imge = pickle.loads(body.decode('ASCII'))
-    cv2.imwrite('rec/'+str(i)+'.jpg', imge)
+    obj = pickle.loads(body.decode('ASCII'))
+    nparr = np.fromstring(obj['image'], np.uint8)
+    img = cv2.imdecode(nparr, cv2.CV_LOAD_IMAGE_COLOR)
+    cv2.imwrite('rec/'+str(i)+'.jpg', img)
     i = i+1
     ch.basic_ack(delivery_tag=method.delivery_tag)
     if( i == 57):
