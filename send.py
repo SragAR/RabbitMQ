@@ -1,17 +1,19 @@
 import pika
-#credentials = pika.PlainCredentials('guest', 'guest')
-#parameters = pika.ConnectionParameters('localhost', 30001, '/', credentials, socket_timeout=2)
-#pika.BlockingConnection(parameters)
-#connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', credentials=credentials))
+import os
+import cv2
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
-channel.queue_declare(queue='task_queue', durable=True)
+channel.queue_declare(queue='task_queue')
 
-channel.basic_publish(exchange='',
-                      routing_key='task_queue',
-                      body='Hello World!',
-		      properties=pika.BasicProperties(
-                         delivery_mode = 2, # make message persistent
-                      ))
+for filename in os.listdir('images'):
+	path = os.path.join('images', filename)
+	image = cv2.imread(path)
+        if image is not None:
+		image = cv2.imencode('.jpg', image)[1].tostring()
+		print('sending', type(image))
+		channel.basic_publish(exchange='',
+				      routing_key='task_queue',
+				      body=image)
+
 print(" [x] Sent 'Hello World!'")
 connection.close()
