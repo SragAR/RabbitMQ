@@ -1,23 +1,26 @@
 import pika
-import os
 import cv2
 import pickle
+import time
 
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
 channel.queue_declare(queue='task_queue')
-count = 1
-for filename in os.listdir('images'):
-	path = os.path.join('images', filename)
-        obj = {}
-	image = cv2.imread(path)
+
+
+cap = cv2.VideoCapture(0)
+
+while cap.isOpened():
+	_,image = cap.read()
+	if _ == 0:
+    		break
         if image is not None:
+                obj = {}
 		obj['image'] = cv2.imencode('.jpg', image)[1].tostring()
-		obj['timestamp'] = count
+		obj['timestamp'] = time.time()
 		channel.basic_publish(exchange='',
 				      routing_key='task_queue',
 				      body=pickle.dumps(obj))
-		count += 1
 
 
 connection.close()
